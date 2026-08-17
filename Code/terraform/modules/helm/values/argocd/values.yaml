@@ -1,0 +1,64 @@
+# Helm values for the upstream ArgoCD chart (https://argoproj.github.io/argo-helm,
+# chart: argo-cd). Deployed as normal pods — no IAM Identity Center, no
+# AWS-managed "EKS Capability" dependency, just Kubernetes + Helm.
+
+global:
+  # No AWS Load Balancer Controller ingress config here by default — expose
+  # via `kubectl port-forward` or add an ingress block once the ALB
+  # controller + a real domain are wired up.
+  logging:
+    format: json
+
+redis:
+  enabled: true
+
+controller:
+  replicas: 1 # application-controller uses leader election, not stateless HA
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      memory: 1Gi
+
+server:
+  replicas: 2
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      memory: 512Mi
+  # Local admin user only, since IAM Identity Center isn't configured.
+  # Retrieve the generated password: see README.md. Keeps ArgoCD's default
+  # self-signed TLS rather than --insecure — switch to insecure mode only
+  # once a real TLS-terminating ALB/ingress is actually in front of this.
+
+repoServer:
+  replicas: 2
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      memory: 512Mi
+
+applicationSet:
+  enabled: true
+  replicas: 1
+
+notifications:
+  enabled: false
+
+tolerations:
+  - key: CriticalAddonsOnly
+    operator: Exists
+
+affinity:
+  nodeAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        preference:
+          matchExpressions:
+            - key: karpenter.sh/nodepool
+              operator: DoesNotExist

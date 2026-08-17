@@ -1,0 +1,44 @@
+# Helm values for the upstream KEDA chart (https://kedacore.github.io/charts,
+# chart: keda).
+
+operator:
+  replicaCount: 2
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      memory: 512Mi
+
+metricsServer:
+  replicaCount: 2
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      memory: 512Mi
+
+webhooks:
+  replicaCount: 2
+
+podDisruptionBudget:
+  operator:
+    enabled: true
+    maxUnavailable: 1
+  metricServer:
+    enabled: true
+    maxUnavailable: 1
+
+tolerations:
+  - key: CriticalAddonsOnly
+    operator: Exists
+
+affinity:
+  nodeAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        preference:
+          matchExpressions:
+            - key: karpenter.sh/nodepool
+              operator: DoesNotExist

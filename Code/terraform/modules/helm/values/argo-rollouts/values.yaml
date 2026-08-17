@@ -1,0 +1,27 @@
+# Helm values for the upstream Argo Rollouts chart
+# (https://argoproj.github.io/argo-helm, chart: argo-rollouts).
+
+controller:
+  replicas: 2
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      memory: 512Mi
+
+  tolerations:
+    - key: CriticalAddonsOnly
+      operator: Exists
+
+  affinity:
+    nodeAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          preference:
+            matchExpressions:
+              - key: karpenter.sh/nodepool
+                operator: DoesNotExist
+
+dashboard:
+  enabled: false

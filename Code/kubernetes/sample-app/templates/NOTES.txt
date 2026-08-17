@@ -1,0 +1,15 @@
+To access the service locally, run
+
+  kubectl port-forward -n {{ .Release.Namespace }} svc/{{ .Release.Name }} 8080:{{ .Values.service.port }}
+
+then open http://localhost:8080 in a browser, or:
+
+  curl http://localhost:8080/get
+
+{{- if .Values.ingress.enabled }}
+
+Ingress is enabled and it is reachable
+Does not work currently for a sample app
+
+  http://{{ .Values.ingress.host }}{{ .Values.ingress.path }}
+{{- end }}

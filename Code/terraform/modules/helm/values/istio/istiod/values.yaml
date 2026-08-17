@@ -1,0 +1,24 @@
+pilot:
+  replicaCount: 2
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      memory: 1Gi
+
+  tolerations:
+    - key: CriticalAddonsOnly
+      operator: Exists
+
+  affinity:
+    nodeAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          preference:
+            matchExpressions:
+              - key: karpenter.sh/nodepool
+                operator: DoesNotExist
+
+meshConfig:
+  accessLogFile: /dev/stdout

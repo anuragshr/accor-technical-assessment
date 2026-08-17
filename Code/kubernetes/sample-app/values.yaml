@@ -1,0 +1,95 @@
+replicaCount: 3
+
+image:
+  repository: public.ecr.aws/kanopy/httpbin
+  tag: v2.14.0
+  pullPolicy: IfNotPresent
+
+annotations: {}
+
+serviceAccount:
+  create: true
+  # Defaults to the release name when empty.
+  name: "pod-sa"
+  annotations: {}
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8080
+
+securityContext:
+  runAsUser: 1000
+  runAsGroup: 3000
+  fsGroup: 2000
+  runAsNonRoot: true
+  readOnlyRootFilesystem: true
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 250m
+    memory: 128Mi
+
+#Supports both standard HPA and KEDA ScaledObject
+# Set type to keda to use KEDA ScaledObject.
+autoscaling:
+  enabled: true
+  # hpa: render a standard HorizontalPodAutoscaler using targetCPUUtilizationPercentage below.
+  # keda: render a KEDA ScaledObject using the keda block below.
+  type: hpa
+  minReplicas: 3
+  maxReplicas: 30
+  targetCPUUtilizationPercentage: 60
+  keda:
+    pollingInterval: 30
+    cooldownPeriod: 300
+    # Any KEDA trigger types are supported
+    triggers:
+      - type: cpu
+        metadata:
+          type: Utilization
+          value: "60"
+
+# Keeps at least this many pods up during node drains
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 2
+
+# Spread replicas evenly across AZs
+topologySpreadConstraints:
+  enabled: true
+  maxSkew: 1
+  topologyKey: topology.kubernetes.io/zone
+  whenUnsatisfiable: ScheduleAnyway
+
+podAnnotations: {}
+podLabels: {}
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+livenessProbe:
+  httpGet:
+    path: /
+    port: 8080
+  initialDelaySeconds: 5
+  periodSeconds: 10
+
+readinessProbe:
+  httpGet:
+    path: /
+    port: 8080
+  initialDelaySeconds: 3
+  periodSeconds: 5
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  host: demo.example.com
+  path: /
+  pathType: Prefix
